@@ -7,6 +7,7 @@ const progress = require('./progressBus');
 const logs = require('./logBus');
 const { startTail } = require('./logTailer');
 const { parseAndEmit } = require('./steamcmdProgress');
+const tasks = require('./taskRegistry');
 
 let serverProcess = null;
 
@@ -24,6 +25,7 @@ function runSteamcmd(steamcmdBase, args, taskId, retries = 1) {
   return new Promise((resolve, reject) => {
     const exe = process.platform === 'win32' ? path.join(steamcmdBase, 'steamcmd.exe') : path.join(steamcmdBase, 'steamcmd.sh');
     const child = spawn(exe, args, { cwd: steamcmdBase });
+  if (taskId) tasks.register(taskId, child);
     let stdout = '';
     let stderr = '';
   const parse = (chunk) => {
@@ -37,10 +39,20 @@ function runSteamcmd(steamcmdBase, args, taskId, retries = 1) {
   child.stderr.on('data', (d) => { const t = String(d).replace(/\r/g, '\n'); stderr += t; logs.emit('steamcmd', t); if (taskId) progress.emit(taskId, { type: 'message', message: t.trim() }); });
     child.on('error', (err) => { if (taskId) progress.emit(taskId, { type: 'error', message: String(err) }); reject(err); });
     child.on('close', code => {
+      if (taskId && tasks.isCanceled(taskId)) {
+        if (taskId) progress.emit(taskId, { type: 'done', code: 'canceled' });
+        tasks.consumeCanceled(taskId);
+        return resolve({ code: 'canceled', stdout, stderr });
+      }
       if (taskId) progress.emit(taskId, { type: 'done', code });
       if (code === 0) return resolve({ code, stdout, stderr });
       // Exit code 8 commonly occurs when SteamCMD updated itself mid-run; retry once
       if (code === 8 && retries > 0) {
+        if (taskId && tasks.isCanceled(taskId)) {
+          if (taskId) progress.emit(taskId, { type: 'done', code: 'canceled' });
+          tasks.consumeCanceled(taskId);
+          return resolve({ code: 'canceled', stdout, stderr });
+        }
         logs.emit('steamcmd', 'SteamCMD exited 8 (likely self-update). Retrying once...\n');
         if (taskId) progress.emit(taskId, { type: 'message', message: 'SteamCMD updated; retrying...' });
         return resolve(runSteamcmd(steamcmdBase, args, taskId, retries - 1));
@@ -71,9 +83,11 @@ async function installServer(store, targetDir, branch = 'stable', betaPassword =
   if (process.platform === 'win32') {
     const logDir = path.join(steam.path, 'logs');
     stopTail = startTail([logDir], (chunk) => { const t = String(chunk).replace(/\r/g, '\n'); logs.emit('steamcmd', t); parseAndEmit('server:install', t); });
+    tasks.addCleanup('server:install', stopTail);
   }
   try {
-    await runSteamcmd(steam.path, args, 'server:install');
+    const res = await runSteamcmd(steam.path, args, 'server:install');
+    if (res && res.code === 'canceled') return { canceled: true };
   } finally {
     if (stopTail) stopTail();
   }
@@ -96,9 +110,11 @@ async function updateServer(store) {
   if (process.platform === 'win32') {
     const logDir = path.join(steam.path, 'logs');
     stopTail = startTail([logDir], (chunk) => { const t = String(chunk).replace(/\r/g, '\n'); logs.emit('steamcmd', t); parseAndEmit('server:update', t); });
+    tasks.addCleanup('server:update', stopTail);
   }
   try {
-    await runSteamcmd(steam.path, args, 'server:update');
+    const res = await runSteamcmd(steam.path, args, 'server:update');
+    if (res && res.code === 'canceled') return { canceled: true };
   } finally {
     if (stopTail) stopTail();
   }

@@ -8,14 +8,17 @@ Change: Remove Steam Workshop name search and Steam Web API usage. Mods are mana
 
 ## Requirements checklist
 
-- SteamCMD auto-install and management (Windows/Linux)
-- One-click Ark server installation to a chosen directory
-- Branch selection: stable (default) and beta
-- Start/Stop/Restart server; show status (Online/Offline/Updating)
-- Mods by ID only: add/remove/list/reorder; auto-update mods on start
-- Full settings UI (no manual INI edits required) with advanced INI editors still available
-- Server update checks and "Update Now" button
-- Clear logs and status from server and SteamCMD
+- SteamCMD auto-install and management (Windows/Linux) — Done
+- One-click Ark server installation to a chosen directory — Done
+- Branch selection: stable (default) and beta — Done
+- Start/Stop server; show status (Online/Offline) — Done
+- Live logs from SteamCMD and server (Windows log tail fallback) — Done
+- Live progress bars for server install/update and mod downloads (percent and bytes; speed/ETA) — Done
+- Cancel running install/update and current mod download — Done
+- Mods by ID only: add/remove/list/reorder; enable/disable; ActiveMods sync to GameUserSettings.ini — Done
+- Full settings UI (no manual INI edits required) with advanced INI editors — Planned
+- Server update checks and "Update Now" button — Partially (manual Update Now implemented)
+- Logs polish (filtering/export) — Planned
 
 ## Architecture overview
 
@@ -55,12 +58,13 @@ No external Steam Web API dependency.
 - mods.reorder(ids)
 - config.getAll()/config.setAll(patch)
 - config.backup()/config.restore()
-- server.install(dir, branch, betaPassword?)
-- server.update()
+- server.install(dir, branch, betaPassword?) → returns { dir } or { canceled: true }
+- server.update() → returns { dir } or { canceled: true }
 - server.start(argsFromConfig)
 - server.stop()
 - server.status()
 - steamcmd.ensureInstalled()
+- tasks.cancel(taskId)
 - updates.check(): { currentBuildId, remoteBuildId, updateAvailable }
 - logs.subscribe(source)
 
@@ -76,19 +80,19 @@ No external Steam Web API dependency.
 
 ## Milestones & acceptance criteria
 
-M1 Scaffold complete; settings persist and tabs render.
-M2 SteamCMD auto-setup with visible logs.
-M3 Install/Update server with branch selection; buildId displayed.
-M4 Start/Stop/Status working reliably.
-M5 Mods by ID: add/remove/list/reorder; update-on-start; ActiveMods sync.
-M6 Full settings UI shipped; backup & restore.
-M7 Update checks and UX polish; logs filtering/export.
+M1 Scaffold complete; settings persist and tabs render. — Done
+M2 SteamCMD auto-setup with visible logs. — Done
+M3 Install/Update server with branch selection; progress with speed/ETA; Cancel. — Done
+M4 Start/Stop/Status working reliably; server logs streaming. — Done
+M5 Mods by ID: add/remove/list/reorder; enable/disable; ActiveMods sync; progress + Cancel. — Done
+M6 Full settings UI shipped; backup & restore. — Planned
+M7 Update checks and UX polish; logs filtering/export. — Planned
 
 ## Risks & mitigations
 
 - INI complexity: Use robust parser and backups; keep advanced editor.
 - Platform path differences: Abstract per-OS paths and signals.
-- Large downloads: Parse SteamCMD output for progress; keep UI responsive.
+- Large downloads: Parse SteamCMD output for progress; show speed/ETA; allow Cancel.
 
 ## Notes
 

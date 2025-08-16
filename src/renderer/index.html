@@ -46,12 +46,14 @@
         <button id="saveInstallPath">Save</button>
       </div>
       <div class="row">
-        <button id="installServerBtn">Install</button>
-        <button id="updateServerBtn">Update Now</button>
+        <button id="installServerBtn" class="btn primary">Install</button>
+        <button id="updateServerBtn" class="btn">Update Now</button>
       </div>
-      <div class="row">
-        <progress id="installProgress" max="100" value="0" style="width:300px;"></progress>
-        <span id="installProgressMsg"></span>
+      <div id="installProgressRow" class="progress-row hidden">
+        <progress id="installProgress" max="100" value="0" style="width:320px;"></progress>
+        <span id="installProgressMsg" class="muted"></span>
+        <span id="installSpeedEta" class="badge hidden"></span>
+        <button id="cancelInstall" class="btn danger" title="Cancel ongoing install/update">Cancel</button>
       </div>
       <div class="row">
         <button id="startServerBtn">Start Server</button>
@@ -66,9 +68,11 @@
         <input id="modIdInput" placeholder="Enter Workshop ID (e.g., 1234567890)" />
         <button id="addModById">Add Mod by ID</button>
       </div>
-      <div class="row">
-        <progress id="modProgress" max="100" value="0" style="width:300px;"></progress>
-        <span id="modProgressMsg"></span>
+      <div id="modProgressRow" class="progress-row hidden">
+        <progress id="modProgress" max="100" value="0" style="width:320px;"></progress>
+        <span id="modProgressMsg" class="muted"></span>
+        <span id="modSpeedEta" class="badge hidden"></span>
+        <button id="cancelMod" class="btn danger" title="Cancel current mod task">Cancel</button>
       </div>
       <div id="installedMods" class="list"></div>
       <h3>Active Mods</h3>

@@ -4,6 +4,7 @@ const Store = require('electron-store');
 const { ensureInstalled: ensureSteamcmdInstalled } = require('./steamcmdManager');
 const { addModById, listInstalledMods, removeMod, getModsState, setModsState, writeActiveMods } = require('./modManager');
 const { installServer, updateServer, startServer, stopServer, status: serverStatus } = require('./serverManager');
+const tasks = require('./taskRegistry');
 
 const store = new Store({
   name: 'settings',
@@ -66,6 +67,7 @@ ipcMain.handle('server:update', async () => updateServer(store));
 ipcMain.handle('server:start', async () => startServer(store));
 ipcMain.handle('server:stop', async () => stopServer());
 ipcMain.handle('server:status', async () => serverStatus());
+ipcMain.handle('tasks:cancel', async (_e, taskId) => tasks.cancel(taskId));
 
 // Mods by ID
 ipcMain.handle('mods:addById', async (_e, id) => addModById(store, id));

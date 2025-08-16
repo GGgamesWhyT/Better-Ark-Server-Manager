@@ -40,4 +40,8 @@ contextBridge.exposeInMainWorld('api', {
       return () => ipcRenderer.removeListener('logs:append', listener);
     }
   }
+  ,
+  tasks: {
+    cancel: (taskId) => ipcRenderer.invoke('tasks:cancel', taskId)
+  }
 });
