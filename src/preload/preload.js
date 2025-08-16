@@ -8,6 +8,13 @@ contextBridge.exposeInMainWorld('api', {
   steamcmd: {
     ensure: () => ipcRenderer.invoke('steamcmd:ensure'),
   },
+  server: {
+    install: (dir, branch, betaPassword) => ipcRenderer.invoke('server:install', dir, branch, betaPassword),
+    update: () => ipcRenderer.invoke('server:update'),
+    start: () => ipcRenderer.invoke('server:start'),
+    stop: () => ipcRenderer.invoke('server:stop'),
+    status: () => ipcRenderer.invoke('server:status'),
+  },
   mods: {
     addById: (id) => ipcRenderer.invoke('mods:addById', id),
     list: () => ipcRenderer.invoke('mods:list'),

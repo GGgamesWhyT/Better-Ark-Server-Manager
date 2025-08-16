@@ -3,6 +3,7 @@ const path = require('path');
 const Store = require('electron-store');
 const { ensureInstalled: ensureSteamcmdInstalled } = require('./steamcmdManager');
 const { addModById, listInstalledMods, removeMod, getModsState, setModsState, writeActiveMods } = require('./modManager');
+const { installServer, updateServer, startServer, stopServer, status: serverStatus } = require('./serverManager');
 
 const store = new Store({
   name: 'settings',
@@ -58,6 +59,13 @@ ipcMain.handle('system:chooseDirectory', async () => {
 ipcMain.handle('steamcmd:ensure', async () => {
   return ensureSteamcmdInstalled(store);
 });
+
+// Server management
+ipcMain.handle('server:install', async (_e, dir, branch, betaPassword) => installServer(store, dir, branch, betaPassword));
+ipcMain.handle('server:update', async () => updateServer(store));
+ipcMain.handle('server:start', async () => startServer(store));
+ipcMain.handle('server:stop', async () => stopServer());
+ipcMain.handle('server:status', async () => serverStatus());
 
 // Mods by ID
 ipcMain.handle('mods:addById', async (_e, id) => addModById(store, id));

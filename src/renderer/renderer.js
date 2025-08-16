@@ -21,8 +21,14 @@ let cachedSettings = {};
   if (installPathEl && cachedSettings.serverInstallPath) {
     installPathEl.value = cachedSettings.serverInstallPath;
   }
+  const branchSel = document.getElementById('branch');
+  if (branchSel) {
+    branchSel.value = cachedSettings.branch || 'stable';
+  }
   await refreshModsList();
   await renderModsState();
+  await refreshServerStatus();
+  startStatusPolling();
 })();
 
 // Ensure SteamCMD
@@ -49,6 +55,7 @@ if (ensureBtn) {
 const browseBtn = document.getElementById('browseInstallPath');
 const savePathBtn = document.getElementById('saveInstallPath');
 const installPathEl = document.getElementById('installPath');
+const branchSel = document.getElementById('branch');
 
 if (browseBtn && installPathEl) {
   browseBtn.addEventListener('click', async () => {
@@ -60,8 +67,15 @@ if (savePathBtn && installPathEl) {
   savePathBtn.addEventListener('click', async () => {
     const p = (installPathEl.value || '').trim();
     if (!p) { alert('Please choose a server install path.'); return; }
-    cachedSettings = await window.api.settings.set({ serverInstallPath: p });
-    alert('Saved server install path.');
+    const patch = { serverInstallPath: p };
+    if (branchSel) patch.branch = branchSel.value;
+    cachedSettings = await window.api.settings.set(patch);
+    alert('Saved server install path and branch.');
+  });
+}
+if (branchSel) {
+  branchSel.addEventListener('change', async () => {
+    cachedSettings = await window.api.settings.set({ branch: branchSel.value });
   });
 }
 
@@ -72,7 +86,103 @@ async function ensureServerPath() {
   }
 }
 
-// Mods: add by ID
+// Server controls
+const installServerBtn = document.getElementById('installServerBtn');
+const updateServerBtn = document.getElementById('updateServerBtn');
+const startServerBtn = document.getElementById('startServerBtn');
+const stopServerBtn = document.getElementById('stopServerBtn');
+const serverStatusEl = document.getElementById('serverStatus');
+
+async function refreshServerStatus() {
+  if (!serverStatusEl) return;
+  try {
+    const st = await window.api.server.status();
+    serverStatusEl.textContent = `Status: ${st.state}${st.pid ? ` (PID ${st.pid})` : ''}`;
+    if (startServerBtn && stopServerBtn) {
+      const running = st.state === 'Online';
+      startServerBtn.disabled = running;
+      stopServerBtn.disabled = !running;
+    }
+  } catch { serverStatusEl.textContent = 'Status: Unknown'; }
+}
+
+let statusTimer;
+function startStatusPolling() {
+  if (statusTimer) clearInterval(statusTimer);
+  statusTimer = setInterval(refreshServerStatus, 3000);
+}
+
+if (installServerBtn) {
+  installServerBtn.addEventListener('click', async () => {
+    try {
+      const dir = (installPathEl.value || '').trim();
+      if (!dir) { alert('Please set install path.'); return; }
+      installServerBtn.disabled = true;
+      installServerBtn.textContent = 'Installing...';
+      await window.api.server.install(dir, branchSel ? branchSel.value : 'stable');
+      alert('Server installed/updated.');
+    } catch (e) {
+      alert('Install failed: ' + (e?.message || e));
+    } finally {
+      installServerBtn.disabled = false;
+      installServerBtn.textContent = 'Install';
+      await refreshServerStatus();
+    }
+  });
+}
+
+if (updateServerBtn) {
+  updateServerBtn.addEventListener('click', async () => {
+    try {
+      await ensureServerPath();
+      updateServerBtn.disabled = true;
+      updateServerBtn.textContent = 'Updating...';
+      await window.api.server.update();
+      alert('Server updated.');
+    } catch (e) {
+      alert('Update failed: ' + (e?.message || e));
+    } finally {
+      updateServerBtn.disabled = false;
+      updateServerBtn.textContent = 'Update Now';
+      await refreshServerStatus();
+    }
+  });
+}
+
+if (startServerBtn) {
+  startServerBtn.addEventListener('click', async () => {
+    try {
+      await ensureServerPath();
+      startServerBtn.disabled = true;
+      startServerBtn.textContent = 'Starting...';
+      await window.api.server.start();
+      await refreshServerStatus();
+    } catch (e) {
+      alert('Start failed: ' + (e?.message || e));
+    } finally {
+      startServerBtn.disabled = false;
+      startServerBtn.textContent = 'Start Server';
+    }
+  });
+}
+
+if (stopServerBtn) {
+  stopServerBtn.addEventListener('click', async () => {
+    try {
+      stopServerBtn.disabled = true;
+      stopServerBtn.textContent = 'Stopping...';
+      await window.api.server.stop();
+      await refreshServerStatus();
+    } catch (e) {
+      alert('Stop failed: ' + (e?.message || e));
+    } finally {
+      stopServerBtn.disabled = false;
+      stopServerBtn.textContent = 'Stop Server';
+    }
+  });
+}
+
+// Mods: add by ID (existing)
 const addByIdBtn = document.getElementById('addModById');
 const modIdInput = document.getElementById('modIdInput');
 if (addByIdBtn && modIdInput) {
