@@ -25,5 +25,19 @@ contextBridge.exposeInMainWorld('api', {
   },
   system: {
     chooseDirectory: () => ipcRenderer.invoke('system:chooseDirectory'),
+  },
+  progress: {
+    onUpdate: (cb) => {
+      const listener = (_e, payload) => cb(payload);
+      ipcRenderer.on('progress:update', listener);
+      return () => ipcRenderer.removeListener('progress:update', listener);
+    }
+  },
+  logs: {
+    onAppend: (cb) => {
+      const listener = (_e, payload) => cb(payload);
+      ipcRenderer.on('logs:append', listener);
+      return () => ipcRenderer.removeListener('logs:append', listener);
+    }
   }
 });

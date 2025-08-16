@@ -4,6 +4,10 @@ const fsp = require('fs/promises');
 const { spawn } = require('child_process');
 const { ensureInstalled } = require('./steamcmdManager');
 const ini = require('ini');
+const progress = require('./progressBus');
+const logs = require('./logBus');
+const { startTail } = require('./logTailer');
+const { parseAndEmit } = require('./steamcmdProgress');
 
 async function pathExists(p) {
   try { await fsp.access(p, fs.constants.F_OK); return true; } catch { return false; }
@@ -13,18 +17,29 @@ function getServerModsDir(serverInstallPath) {
   return path.join(serverInstallPath, 'ShooterGame', 'Content', 'Mods');
 }
 
-function runSteamcmd(steamcmdBase, args) {
+function runSteamcmd(steamcmdBase, args, taskId, retries = 1) {
   return new Promise((resolve, reject) => {
     const exe = process.platform === 'win32' ? path.join(steamcmdBase, 'steamcmd.exe') : path.join(steamcmdBase, 'steamcmd.sh');
     const child = spawn(exe, args, { cwd: steamcmdBase });
     let stdout = '';
     let stderr = '';
-    child.stdout.on('data', d => { stdout += d.toString(); });
-    child.stderr.on('data', d => { stderr += d.toString(); });
-    child.on('error', reject);
+    const parse = (chunk) => {
+      const text = chunk.toString();
+      stdout += text;
+      if (taskId) parseAndEmit(taskId, text);
+    };
+  child.stdout.on('data', (d) => { const t = String(d).replace(/\r/g, '\n'); logs.emit('steamcmd', t); parse(d); });
+  child.stderr.on('data', (d) => { const t = String(d).replace(/\r/g, '\n'); stderr += t; logs.emit('steamcmd', t); if (taskId) progress.emit(taskId, { type: 'message', message: t.trim() }); });
+    child.on('error', (err) => { if (taskId) progress.emit(taskId, { type: 'error', message: String(err) }); reject(err); });
     child.on('close', code => {
-      if (code === 0) resolve({ code, stdout, stderr });
-      else reject(new Error(`steamcmd exited ${code}: ${stderr || stdout}`));
+      if (taskId) progress.emit(taskId, { type: 'done', code });
+      if (code === 0) return resolve({ code, stdout, stderr });
+      if (code === 8 && retries > 0) {
+        logs.emit('steamcmd', 'SteamCMD exited 8 (likely self-update). Retrying once...\n');
+        if (taskId) progress.emit(taskId, { type: 'message', message: 'SteamCMD updated; retrying...' });
+        return resolve(runSteamcmd(steamcmdBase, args, taskId, retries - 1));
+      }
+      return reject(new Error(`steamcmd exited ${code}: ${stderr || stdout}`));
     });
   });
 }
@@ -78,7 +93,16 @@ async function addModById(store, modId) {
   if (!serverInstallPath) throw new Error('Set server install path first');
   const steam = await ensureInstalled(store);
   const args = ['+login', 'anonymous', '+workshop_download_item', '346110', String(modId), 'validate', '+quit'];
-  await runSteamcmd(steam.path, args);
+  let stopTail;
+  if (process.platform === 'win32') {
+    const logDir = path.join(steam.path, 'logs');
+    stopTail = startTail([logDir], (chunk) => { const t = String(chunk).replace(/\r/g, '\n'); logs.emit('steamcmd', t); parseAndEmit(`mod:${modId}`, t); });
+  }
+  try {
+    await runSteamcmd(steam.path, args, `mod:${modId}`);
+  } finally {
+    if (stopTail) stopTail();
+  }
   const workshopRoot = path.join(steam.path, 'steamapps', 'workshop', 'content', '346110');
   const modFolder = path.join(workshopRoot, String(modId));
   if (!(await pathExists(modFolder))) throw new Error(`Downloaded mod folder not found: ${modFolder}`);

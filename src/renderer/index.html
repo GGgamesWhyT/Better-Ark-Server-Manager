@@ -50,6 +50,10 @@
         <button id="updateServerBtn">Update Now</button>
       </div>
       <div class="row">
+        <progress id="installProgress" max="100" value="0" style="width:300px;"></progress>
+        <span id="installProgressMsg"></span>
+      </div>
+      <div class="row">
         <button id="startServerBtn">Start Server</button>
         <button id="stopServerBtn">Stop Server</button>
         <span id="serverStatus">Status: Unknown</span>
@@ -61,6 +65,10 @@
       <div class="row">
         <input id="modIdInput" placeholder="Enter Workshop ID (e.g., 1234567890)" />
         <button id="addModById">Add Mod by ID</button>
+      </div>
+      <div class="row">
+        <progress id="modProgress" max="100" value="0" style="width:300px;"></progress>
+        <span id="modProgressMsg"></span>
       </div>
       <div id="installedMods" class="list"></div>
       <h3>Active Mods</h3>
@@ -82,6 +90,7 @@
 
     <section id="logs" class="tab">
       <h2>Logs</h2>
+  <div class="row"><button id="clearLogs">Clear</button></div>
       <pre id="logsOutput">Logs will appear here.</pre>
     </section>
   </main>

@@ -29,6 +29,8 @@ let cachedSettings = {};
   await renderModsState();
   await refreshServerStatus();
   startStatusPolling();
+  setupProgressHandlers();
+  setupLogs();
 })();
 
 // Ensure SteamCMD
@@ -119,7 +121,8 @@ if (installServerBtn) {
       if (!dir) { alert('Please set install path.'); return; }
       installServerBtn.disabled = true;
       installServerBtn.textContent = 'Installing...';
-      await window.api.server.install(dir, branchSel ? branchSel.value : 'stable');
+  resetInstallProgress();
+  await window.api.server.install(dir, branchSel ? branchSel.value : 'stable');
       alert('Server installed/updated.');
     } catch (e) {
       alert('Install failed: ' + (e?.message || e));
@@ -137,7 +140,8 @@ if (updateServerBtn) {
       await ensureServerPath();
       updateServerBtn.disabled = true;
       updateServerBtn.textContent = 'Updating...';
-      await window.api.server.update();
+  resetInstallProgress();
+  await window.api.server.update();
       alert('Server updated.');
     } catch (e) {
       alert('Update failed: ' + (e?.message || e));
@@ -196,7 +200,8 @@ if (addByIdBtn && modIdInput) {
       }
       addByIdBtn.disabled = true;
       addByIdBtn.textContent = 'Downloading...';
-      await window.api.mods.addById(id);
+  resetModProgress();
+  await window.api.mods.addById(id);
       await refreshModsList();
       await renderModsState();
       alert('Mod added.');
@@ -292,5 +297,70 @@ async function renderModsState() {
         alert('Failed to write ActiveMods: ' + (e?.message || e));
       }
     };
+  }
+}
+
+// Progress bars
+const installProgress = document.getElementById('installProgress');
+const installProgressMsg = document.getElementById('installProgressMsg');
+const modProgress = document.getElementById('modProgress');
+const modProgressMsg = document.getElementById('modProgressMsg');
+
+function resetInstallProgress() {
+  if (installProgress) installProgress.value = 0;
+  if (installProgressMsg) installProgressMsg.textContent = '';
+}
+function resetModProgress() {
+  if (modProgress) modProgress.value = 0;
+  if (modProgressMsg) modProgressMsg.textContent = '';
+}
+
+function setupProgressHandlers() {
+  if (!window.api.progress?.onUpdate) return;
+  window.api.progress.onUpdate(({ taskId, type, percent, message }) => {
+    if (taskId === 'server:install' || taskId === 'server:update') {
+  if (type === 'progress' && installProgress && typeof percent === 'number') installProgress.value = percent;
+  if (message && installProgressMsg) installProgressMsg.textContent = message;
+      if (type === 'done' && installProgress) installProgress.value = 100;
+    } else if (typeof taskId === 'string' && taskId.startsWith('mod:')) {
+  if (type === 'progress' && modProgress && typeof percent === 'number') modProgress.value = percent;
+  if (message && modProgressMsg) modProgressMsg.textContent = message;
+      if (type === 'done' && modProgress) modProgress.value = 100;
+    }
+  });
+}
+
+// Logs
+const logsOutput = document.getElementById('logsOutput');
+const clearLogsBtn = document.getElementById('clearLogs');
+let logQueue = [];
+let logFlushTimer = null;
+function setupLogs() {
+  if (!window.api.logs?.onAppend || !logsOutput) return;
+  const scheduleFlush = () => {
+    if (logFlushTimer) return;
+    logFlushTimer = setInterval(() => {
+      if (!logQueue.length) return;
+      const batch = logQueue.join('');
+      logQueue = [];
+      // Keep autoscroll if near bottom
+      const nearBottom = (logsOutput.scrollHeight - logsOutput.scrollTop - logsOutput.clientHeight) < 50;
+      logsOutput.insertAdjacentText('beforeend', batch);
+      // Trim very large logs to avoid UI lag (keep last ~200k chars)
+      const maxChars = 200000;
+      if (logsOutput.textContent.length > maxChars) {
+        logsOutput.textContent = logsOutput.textContent.slice(-maxChars);
+      }
+      if (nearBottom) logsOutput.scrollTop = logsOutput.scrollHeight;
+    }, 100);
+  };
+  window.api.logs.onAppend(({ source, message }) => {
+    const prefix = source === 'steamcmd' ? '[SteamCMD] ' : '[Server] ';
+    const text = message.endsWith('\n') ? message : message + '\n';
+    logQueue.push(prefix + text);
+    scheduleFlush();
+  });
+  if (clearLogsBtn && logsOutput) {
+    clearLogsBtn.onclick = () => { logsOutput.textContent = ''; };
   }
 }

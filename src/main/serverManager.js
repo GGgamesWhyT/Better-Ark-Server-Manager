@@ -3,6 +3,10 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const { spawn } = require('child_process');
 const { ensureInstalled } = require('./steamcmdManager');
+const progress = require('./progressBus');
+const logs = require('./logBus');
+const { startTail } = require('./logTailer');
+const { parseAndEmit } = require('./steamcmdProgress');
 
 let serverProcess = null;
 
@@ -16,18 +20,32 @@ function getServerExecutable(baseDir) {
   }
 }
 
-function runSteamcmd(steamcmdBase, args) {
+function runSteamcmd(steamcmdBase, args, taskId, retries = 1) {
   return new Promise((resolve, reject) => {
     const exe = process.platform === 'win32' ? path.join(steamcmdBase, 'steamcmd.exe') : path.join(steamcmdBase, 'steamcmd.sh');
     const child = spawn(exe, args, { cwd: steamcmdBase });
     let stdout = '';
     let stderr = '';
-    child.stdout.on('data', d => { stdout += d.toString(); });
-    child.stderr.on('data', d => { stderr += d.toString(); });
-    child.on('error', reject);
+  const parse = (chunk) => {
+      const text = chunk.toString();
+      stdout += text;
+      if (taskId) {
+    parseAndEmit(taskId, text);
+      }
+    };
+  child.stdout.on('data', (d) => { const t = String(d).replace(/\r/g, '\n'); logs.emit('steamcmd', t); parse(d); });
+  child.stderr.on('data', (d) => { const t = String(d).replace(/\r/g, '\n'); stderr += t; logs.emit('steamcmd', t); if (taskId) progress.emit(taskId, { type: 'message', message: t.trim() }); });
+    child.on('error', (err) => { if (taskId) progress.emit(taskId, { type: 'error', message: String(err) }); reject(err); });
     child.on('close', code => {
-      if (code === 0) resolve({ code, stdout, stderr });
-      else reject(new Error(`steamcmd exited ${code}: ${stderr || stdout}`));
+      if (taskId) progress.emit(taskId, { type: 'done', code });
+      if (code === 0) return resolve({ code, stdout, stderr });
+      // Exit code 8 commonly occurs when SteamCMD updated itself mid-run; retry once
+      if (code === 8 && retries > 0) {
+        logs.emit('steamcmd', 'SteamCMD exited 8 (likely self-update). Retrying once...\n');
+        if (taskId) progress.emit(taskId, { type: 'message', message: 'SteamCMD updated; retrying...' });
+        return resolve(runSteamcmd(steamcmdBase, args, taskId, retries - 1));
+      }
+      return reject(new Error(`steamcmd exited ${code}: ${stderr || stdout}`));
     });
   });
 }
@@ -42,13 +60,23 @@ async function installServer(store, targetDir, branch = 'stable', betaPassword =
   if (!targetDir) throw new Error('Install directory required');
   await fsp.mkdir(targetDir, { recursive: true });
   const steam = await ensureInstalled(store);
-  const args = ['+login', 'anonymous', '+force_install_dir', quoteForceInstallDir(targetDir), '+app_update', '376030'];
+  const args = ['+force_install_dir', quoteForceInstallDir(targetDir), '+login', 'anonymous', '+app_update', '376030'];
   if (branch && branch.toLowerCase() === 'beta') {
     args.push('-beta', 'beta');
     if (betaPassword) args.push('-betapassword', betaPassword);
   }
   args.push('validate', '+quit');
-  await runSteamcmd(steam.path, args);
+  // Tail SteamCMD logs directory to surface buffered output more frequently on Windows
+  let stopTail;
+  if (process.platform === 'win32') {
+    const logDir = path.join(steam.path, 'logs');
+    stopTail = startTail([logDir], (chunk) => { const t = String(chunk).replace(/\r/g, '\n'); logs.emit('steamcmd', t); parseAndEmit('server:install', t); });
+  }
+  try {
+    await runSteamcmd(steam.path, args, 'server:install');
+  } finally {
+    if (stopTail) stopTail();
+  }
   // Persist server path if not set yet
   if (!store.get('serverInstallPath')) store.set('serverInstallPath', targetDir);
   return { dir: targetDir };
@@ -59,12 +87,21 @@ async function updateServer(store) {
   if (!dir) throw new Error('Set server install path first');
   const steam = await ensureInstalled(store);
   const branch = (store.get('branch') || 'stable');
-  const args = ['+login', 'anonymous', '+force_install_dir', quoteForceInstallDir(dir), '+app_update', '376030'];
+  const args = ['+force_install_dir', quoteForceInstallDir(dir), '+login', 'anonymous', '+app_update', '376030'];
   if (branch && branch.toLowerCase() === 'beta') {
     args.push('-beta', 'beta');
   }
   args.push('validate', '+quit');
-  await runSteamcmd(steam.path, args);
+  let stopTail;
+  if (process.platform === 'win32') {
+    const logDir = path.join(steam.path, 'logs');
+    stopTail = startTail([logDir], (chunk) => { const t = String(chunk).replace(/\r/g, '\n'); logs.emit('steamcmd', t); parseAndEmit('server:update', t); });
+  }
+  try {
+    await runSteamcmd(steam.path, args, 'server:update');
+  } finally {
+    if (stopTail) stopTail();
+  }
   return { dir };
 }
 
@@ -102,6 +139,8 @@ async function startServer(store) {
   const { firstArg, rest } = buildLaunchArgs(store);
   const args = [firstArg, ...rest];
   serverProcess = spawn(exe, args, { cwd: path.dirname(exe) });
+  serverProcess.stdout?.on('data', (d) => logs.emit('server', d.toString()));
+  serverProcess.stderr?.on('data', (d) => logs.emit('server', d.toString()));
   serverProcess.on('close', () => { serverProcess = null; });
   serverProcess.on('error', () => { serverProcess = null; });
   return { pid: serverProcess.pid, args };
