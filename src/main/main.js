@@ -1,7 +1,8 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const { ensureInstalled: ensureSteamcmdInstalled } = require('./steamcmdManager');
+const { addModById, listInstalledMods, removeMod, getModsState, setModsState, writeActiveMods } = require('./modManager');
 
 const store = new Store({
   name: 'settings',
@@ -46,7 +47,22 @@ ipcMain.handle('settings:set', async (_e, patch) => {
   return store.store;
 });
 
+// Directory picker
+ipcMain.handle('system:chooseDirectory', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openDirectory'] });
+  if (canceled || !filePaths || !filePaths.length) return null;
+  return filePaths[0];
+});
+
 // SteamCMD ensureInstalled
 ipcMain.handle('steamcmd:ensure', async () => {
   return ensureSteamcmdInstalled(store);
 });
+
+// Mods by ID
+ipcMain.handle('mods:addById', async (_e, id) => addModById(store, id));
+ipcMain.handle('mods:list', async () => listInstalledMods(store));
+ipcMain.handle('mods:remove', async (_e, id) => removeMod(store, id));
+ipcMain.handle('mods:getState', async () => getModsState(store));
+ipcMain.handle('mods:setState', async (_e, state) => setModsState(store, state));
+ipcMain.handle('mods:writeActiveMods', async () => writeActiveMods(store));

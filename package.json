@@ -12,7 +12,8 @@
   "dependencies": {
     "electron-store": "^8.2.0",
     "extract-zip": "^2.0.1",
-    "tar": "^6.2.1"
+    "tar": "^6.2.1",
+    "ini": "^4.1.1"
   },
   "devDependencies": {
     "electron": "^30.0.0",

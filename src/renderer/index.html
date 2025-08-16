@@ -38,10 +38,12 @@
           </select>
         </label>
       </div>
-      <div>
-        <label>Install Path:
-          <input id="installPath" placeholder="Choose a folder (coming soon)" />
+      <div class="row">
+        <label style="flex:1">Server Install Path
+          <input id="installPath" placeholder="Choose a folder" />
         </label>
+        <button id="browseInstallPath">Browse</button>
+        <button id="saveInstallPath">Save</button>
       </div>
       <div class="row">
         <button disabled>Install (coming soon)</button>
@@ -56,6 +58,11 @@
         <button id="addModById">Add Mod by ID</button>
       </div>
       <div id="installedMods" class="list"></div>
+      <h3>Active Mods</h3>
+      <div id="modsState" class="list"></div>
+      <div class="row">
+        <button id="saveActiveMods">Save Active Mods to INI</button>
+      </div>
     </section>
 
     <section id="settings" class="tab">
