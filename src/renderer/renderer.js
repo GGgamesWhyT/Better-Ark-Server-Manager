@@ -9,42 +9,46 @@ tabButtons.forEach(btn => btn.addEventListener('click', () => {
   document.getElementById(btn.dataset.tab).classList.add('active');
 }));
 
-// Load settings and hook simple save
+// Load settings
+let cachedSettings = {};
 (async function init() {
-  const settings = await window.api.settings.get();
-  const apiKeyEl = document.getElementById('steamApiKey');
-  if (apiKeyEl && settings.steamApiKey) apiKeyEl.value = settings.steamApiKey;
+  cachedSettings = await window.api.settings.get();
+  const steamcmdPathEl = document.getElementById('steamcmdPath');
+  if (steamcmdPathEl && cachedSettings.steamcmdPath) {
+    steamcmdPathEl.textContent = `SteamCMD at: ${cachedSettings.steamcmdPath}`;
+  }
 })();
 
-const saveApiKeyBtn = document.getElementById('saveApiKey');
-if (saveApiKeyBtn) {
-  saveApiKeyBtn.addEventListener('click', async () => {
-    const key = document.getElementById('steamApiKey').value.trim();
-    await window.api.settings.set({ steamApiKey: key });
-    alert('Saved Steam Web API key.');
+// Ensure SteamCMD
+const ensureBtn = document.getElementById('ensureSteamcmd');
+if (ensureBtn) {
+  ensureBtn.addEventListener('click', async () => {
+    ensureBtn.disabled = true;
+    ensureBtn.textContent = 'Installing...';
+    try {
+      const res = await window.api.steamcmd.ensure();
+      const steamcmdPathEl = document.getElementById('steamcmdPath');
+      if (steamcmdPathEl) steamcmdPathEl.textContent = `SteamCMD at: ${res.path}`;
+      alert('SteamCMD is installed and ready.');
+    } catch (e) {
+      alert('Failed to install SteamCMD: ' + (e?.message || e));
+    } finally {
+      ensureBtn.disabled = false;
+      ensureBtn.textContent = 'Install/Verify SteamCMD';
+    }
   });
 }
 
-// Mods search placeholder
-const searchBtn = document.getElementById('searchMods');
-const queryEl = document.getElementById('modQuery');
-const resultsEl = document.getElementById('modResults');
-
-if (searchBtn && queryEl && resultsEl) {
-  searchBtn.addEventListener('click', async () => {
-    const q = queryEl.value.trim();
-    resultsEl.innerHTML = 'Searching...';
-    const res = await window.api.mods.search(q, 1);
-    if (!res.items.length) {
-      resultsEl.innerHTML = '<em>No results (API integration coming next). You can still add by ID from the Workshop page.</em>';
+// Mods: add by ID (placeholder)
+const addByIdBtn = document.getElementById('addModById');
+const modIdInput = document.getElementById('modIdInput');
+if (addByIdBtn && modIdInput) {
+  addByIdBtn.addEventListener('click', async () => {
+    const id = (modIdInput.value || '').trim();
+    if (!/^\d+$/.test(id)) {
+      alert('Please enter a valid numeric Workshop ID.');
       return;
     }
-    resultsEl.innerHTML = '';
-    res.items.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'result';
-      div.innerHTML = `<span>${item.title} <small>(${item.id})</small></span><button>Add</button>`;
-      resultsEl.appendChild(div);
-    });
+    alert(`Add mod ${id} (download/install via SteamCMD coming next).`);
   });
 }

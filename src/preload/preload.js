@@ -5,7 +5,7 @@ contextBridge.exposeInMainWorld('api', {
     get: () => ipcRenderer.invoke('settings:get'),
     set: (patch) => ipcRenderer.invoke('settings:set', patch),
   },
-  mods: {
-    search: (query, page = 1) => ipcRenderer.invoke('mods:search', query, page),
+  steamcmd: {
+    ensure: () => ipcRenderer.invoke('steamcmd:ensure'),
   }
 });

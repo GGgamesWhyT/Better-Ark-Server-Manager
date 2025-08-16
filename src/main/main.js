@@ -1,11 +1,11 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
+const { ensureInstalled: ensureSteamcmdInstalled } = require('./steamcmdManager');
 
 const store = new Store({
   name: 'settings',
   defaults: {
-    steamApiKey: '',
     steamcmdPath: '',
     serverInstallPath: '',
     branch: 'stable',
@@ -46,7 +46,7 @@ ipcMain.handle('settings:set', async (_e, patch) => {
   return store.store;
 });
 
-// IPC: placeholder for mod search (will call Steam Web API later)
-ipcMain.handle('mods:search', async (_e, _query, _page = 1) => {
-  return { items: [], total: 0, hasMore: false };
+// SteamCMD ensureInstalled
+ipcMain.handle('steamcmd:ensure', async () => {
+  return ensureSteamcmdInstalled(store);
 });

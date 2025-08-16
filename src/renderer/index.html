@@ -22,6 +22,10 @@
   <main>
     <section id="dashboard" class="tab active">
       <p>Welcome! Use the tabs to begin. This is a minimal shell; features will appear as we implement them.</p>
+      <div class="row">
+        <button id="ensureSteamcmd">Install/Verify SteamCMD</button>
+        <span id="steamcmdPath"></span>
+      </div>
     </section>
 
     <section id="install" class="tab">
@@ -48,20 +52,14 @@
     <section id="mods" class="tab">
       <h2>Mods</h2>
       <div class="row">
-        <input id="modQuery" placeholder="Search Workshop by name" />
-        <button id="searchMods">Search</button>
+        <input id="modIdInput" placeholder="Enter Workshop ID (e.g., 1234567890)" />
+        <button id="addModById">Add Mod by ID</button>
       </div>
-      <div id="modResults" class="list"></div>
+      <div id="installedMods" class="list"></div>
     </section>
 
     <section id="settings" class="tab">
       <h2>Settings</h2>
-      <div class="row">
-        <label>Steam Web API Key
-          <input id="steamApiKey" placeholder="Enter your Steam API key" />
-        </label>
-        <button id="saveApiKey">Save</button>
-      </div>
       <p>Full settings UI coming next: searchable categories and presets.</p>
     </section>
 

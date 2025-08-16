@@ -10,7 +10,9 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "electron-store": "^8.2.0"
+    "electron-store": "^8.2.0",
+    "extract-zip": "^2.0.1",
+    "tar": "^6.2.1"
   },
   "devDependencies": {
     "electron": "^30.0.0",
