@@ -47,5 +47,8 @@ contextBridge.exposeInMainWorld('api', {
   ,
   tasks: {
     cancel: (taskId) => ipcRenderer.invoke('tasks:cancel', taskId)
+  },
+  updates: {
+    check: () => ipcRenderer.invoke('updates:check')
   }
 });

@@ -564,3 +564,29 @@ if (saveSettingsBtn) {
 
 // Load settings form on init
 loadSettingsForm();
+
+const checkUpdatesBtn = document.getElementById('checkUpdatesBtn');
+const updateInfo = document.getElementById('updateInfo');
+if (checkUpdatesBtn) {
+  checkUpdatesBtn.onclick = async () => {
+    try {
+      checkUpdatesBtn.disabled = true;
+      if (updateInfo) updateInfo.textContent = 'Checking...';
+      const res = await window.api.updates.check();
+      if (updateInfo) {
+        if (res.remoteBuildId && res.currentBuildId) {
+          updateInfo.textContent = res.updateAvailable
+            ? `Update available: remote ${res.remoteBuildId}, current ${res.currentBuildId}`
+            : `Up to date: ${res.currentBuildId}`;
+        } else {
+          updateInfo.textContent = 'Could not determine build IDs';
+        }
+      }
+    } catch (e) {
+      if (updateInfo) updateInfo.textContent = 'Update check failed';
+    } finally {
+      checkUpdatesBtn.disabled = false;
+      setTimeout(() => { if (updateInfo && updateInfo.textContent.startsWith('Up to date')) updateInfo.textContent = ''; }, 5000);
+    }
+  };
+}

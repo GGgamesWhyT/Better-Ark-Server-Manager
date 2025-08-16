@@ -5,6 +5,7 @@ const { ensureInstalled: ensureSteamcmdInstalled } = require('./steamcmdManager'
 const { addModById, listInstalledMods, removeMod, getModsState, setModsState, writeActiveMods } = require('./modManager');
 const { installServer, updateServer, startServer, stopServer, status: serverStatus } = require('./serverManager');
 const { getServerConfig, setServerConfig } = require('./configManager');
+const { checkForUpdates } = require('./updateChecker');
 const tasks = require('./taskRegistry');
 
 const store = new Store({
@@ -73,6 +74,7 @@ ipcMain.handle('tasks:cancel', async (_e, taskId) => tasks.cancel(taskId));
 // Server config
 ipcMain.handle('config:get', async () => getServerConfig(store));
 ipcMain.handle('config:set', async (_e, patch) => setServerConfig(store, patch));
+ipcMain.handle('updates:check', async () => checkForUpdates(store));
 
 // Mods by ID
 ipcMain.handle('mods:addById', async (_e, id) => addModById(store, id));
