@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Better Ark Server Manager</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Better Ark Server Manager</h1>
+  </header>
+  <nav class="tabs">
+    <button data-tab="dashboard" class="active">Dashboard</button>
+    <button data-tab="install">Install/Update</button>
+    <button data-tab="mods">Mods</button>
+    <button data-tab="settings">Settings</button>
+    <button data-tab="advanced">Advanced</button>
+    <button data-tab="logs">Logs</button>
+  </nav>
+
+  <main>
+    <section id="dashboard" class="tab active">
+      <p>Welcome! Use the tabs to begin. This is a minimal shell; features will appear as we implement them.</p>
+    </section>
+
+    <section id="install" class="tab">
+      <h2>Install / Update</h2>
+      <div>
+        <label>Branch:
+          <select id="branch">
+            <option value="stable">Stable</option>
+            <option value="beta">Beta</option>
+          </select>
+        </label>
+      </div>
+      <div>
+        <label>Install Path:
+          <input id="installPath" placeholder="Choose a folder (coming soon)" />
+        </label>
+      </div>
+      <div class="row">
+        <button disabled>Install (coming soon)</button>
+        <button disabled>Update Now (coming soon)</button>
+      </div>
+    </section>
+
+    <section id="mods" class="tab">
+      <h2>Mods</h2>
+      <div class="row">
+        <input id="modQuery" placeholder="Search Workshop by name" />
+        <button id="searchMods">Search</button>
+      </div>
+      <div id="modResults" class="list"></div>
+    </section>
+
+    <section id="settings" class="tab">
+      <h2>Settings</h2>
+      <div class="row">
+        <label>Steam Web API Key
+          <input id="steamApiKey" placeholder="Enter your Steam API key" />
+        </label>
+        <button id="saveApiKey">Save</button>
+      </div>
+      <p>Full settings UI coming next: searchable categories and presets.</p>
+    </section>
+
+    <section id="advanced" class="tab">
+      <h2>Advanced</h2>
+      <p>Raw INI editor coming later.</p>
+    </section>
+
+    <section id="logs" class="tab">
+      <h2>Logs</h2>
+      <pre id="logsOutput">Logs will appear here.</pre>
+    </section>
+  </main>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
