@@ -16,6 +16,7 @@ main { padding: 16px; }
 .progress-row { display:flex; align-items:center; gap:10px; margin: 6px 0; }
 .badge { background:#eef2ff; color:#3730a3; padding:2px 6px; border-radius:9999px; font-size:12px; }
 .muted { color:#6b7280; font-size: 12px; }
+.hint { color:#6b7280; font-size: 12px; display:block; margin-top: 2px; }
 progress { appearance:none; height: 12px; border-radius: 6px; overflow:hidden; }
 progress::-webkit-progress-bar { background:#e5e7eb; border-radius:6px; }
 progress::-webkit-progress-value { background:#0ea5e9; border-radius:6px; }

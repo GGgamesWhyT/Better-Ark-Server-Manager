@@ -114,9 +114,11 @@
         <div class="result">
           <label>Port
             <input id="cfgPort" type="number" min="1" max="65535" />
+            <small class="hint">Default: 7777 (UDP). Make sure it is open on your firewall/router.</small>
           </label>
           <label>Query Port
             <input id="cfgQueryPort" type="number" min="1" max="65535" />
+            <small class="hint">Default: 27015 (UDP). Used by server browser.</small>
           </label>
         </div>
         <div class="result">
@@ -125,6 +127,31 @@
           </label>
           <label>RCON Port
             <input id="cfgRconPort" type="number" min="1" max="65535" />
+            <small class="hint">Default: 27020 (TCP). Required if RCON is enabled.</small>
+          </label>
+        </div>
+        <div class="result">
+          <label>Max Players
+            <input id="cfgMaxPlayers" type="number" min="1" max="255" />
+            <small class="hint">Typical: 10–70. Higher values need more CPU/RAM.</small>
+          </label>
+        </div>
+        <div class="result">
+          <label>Server Password
+            <input id="cfgServerPassword" type="password" autocomplete="new-password" />
+            <small class="hint">Leave blank for no password.</small>
+          </label>
+          <label>Admin Password
+            <input id="cfgServerAdminPassword" type="password" autocomplete="new-password" />
+            <small class="hint">Used for admin commands.</small>
+          </label>
+        </div>
+        <div class="result">
+          <label>
+            <input id="cfgServerPVE" type="checkbox" /> Server PVE
+          </label>
+          <label>
+            <input id="cfgNoBattlEye" type="checkbox" /> Disable BattlEye
           </label>
         </div>
       </div>

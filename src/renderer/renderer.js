@@ -522,6 +522,11 @@ const cfgPort = document.getElementById('cfgPort');
 const cfgQueryPort = document.getElementById('cfgQueryPort');
 const cfgRconEnabled = document.getElementById('cfgRconEnabled');
 const cfgRconPort = document.getElementById('cfgRconPort');
+const cfgMaxPlayers = document.getElementById('cfgMaxPlayers');
+const cfgServerPassword = document.getElementById('cfgServerPassword');
+const cfgServerAdminPassword = document.getElementById('cfgServerAdminPassword');
+const cfgServerPVE = document.getElementById('cfgServerPVE');
+const cfgNoBattlEye = document.getElementById('cfgNoBattlEye');
 const saveSettingsBtn = document.getElementById('saveSettings');
 const settingsStatus = document.getElementById('settingsStatus');
 
@@ -534,21 +539,44 @@ async function loadSettingsForm() {
     if (cfgQueryPort) cfgQueryPort.value = cfg.QueryPort ?? 27015;
     if (cfgRconEnabled) cfgRconEnabled.checked = !!cfg.RCONEnabled;
     if (cfgRconPort) cfgRconPort.value = cfg.RCONPort ?? 27020;
+    if (cfgMaxPlayers) cfgMaxPlayers.value = cfg.MaxPlayers ?? 70;
+    if (cfgServerPassword) cfgServerPassword.value = cfg.ServerPassword ?? '';
+    if (cfgServerAdminPassword) cfgServerAdminPassword.value = cfg.ServerAdminPassword ?? '';
+    if (cfgServerPVE) cfgServerPVE.checked = !!cfg.ServerPVE;
+    if (cfgNoBattlEye) cfgNoBattlEye.checked = !!cfg.NoBattlEye;
   } catch {}
 }
+
+function validPort(n) { return Number.isInteger(n) && n >= 1 && n <= 65535; }
+function coerceInt(v, def) { const n = Number(v); return Number.isFinite(n) ? Math.trunc(n) : def; }
 
 if (saveSettingsBtn) {
   saveSettingsBtn.onclick = async () => {
     try {
       saveSettingsBtn.disabled = true;
       settingsStatus.textContent = 'Saving...';
+      const port = coerceInt(cfgPort?.value, 7777);
+      const qPort = coerceInt(cfgQueryPort?.value, 27015);
+      const rconPort = coerceInt(cfgRconPort?.value, 27020);
+      const maxPlayers = coerceInt(cfgMaxPlayers?.value, 70);
+      if (!validPort(port) || !validPort(qPort) || !validPort(rconPort)) {
+        throw new Error('Ports must be between 1 and 65535');
+      }
+      if (!(maxPlayers >= 1 && maxPlayers <= 255)) {
+        throw new Error('Max Players must be between 1 and 255');
+      }
       const patch = {
         Map: cfgMap ? cfgMap.value : 'TheIsland',
         SessionName: cfgSessionName ? cfgSessionName.value : 'My Ark Server',
-        Port: cfgPort ? Number(cfgPort.value) : 7777,
-        QueryPort: cfgQueryPort ? Number(cfgQueryPort.value) : 27015,
+        Port: port,
+        QueryPort: qPort,
         RCONEnabled: cfgRconEnabled ? !!cfgRconEnabled.checked : false,
-        RCONPort: cfgRconPort ? Number(cfgRconPort.value) : 27020,
+        RCONPort: rconPort,
+        MaxPlayers: maxPlayers,
+        ServerPassword: cfgServerPassword ? cfgServerPassword.value : '',
+        ServerAdminPassword: cfgServerAdminPassword ? cfgServerAdminPassword.value : '',
+        ServerPVE: cfgServerPVE ? !!cfgServerPVE.checked : false,
+        NoBattlEye: cfgNoBattlEye ? !!cfgNoBattlEye.checked : false,
       };
       const res = await window.api.config.set(patch);
       settingsStatus.textContent = res.iniPath ? `Saved (INI: ${res.iniPath})` : 'Saved';

@@ -133,6 +133,7 @@ function buildLaunchArgs(store) {
 
   const firstArg = `${map}?listen?SessionName=${encodeURIComponent(session)}?Port=${port}?QueryPort=${queryPort}${rconEnabled ? `?RCONEnabled=True?RCONPort=${rconPort}` : ''}`;
   const rest = ['-server', '-log'];
+  if (cfg.MaxPlayers) rest.push(`-MaxPlayers=${Number(cfg.MaxPlayers)}`);
   // Optional flags from cfg
   if (cfg.NoBattlEye) rest.push('-NoBattlEye');
   return { firstArg, rest };

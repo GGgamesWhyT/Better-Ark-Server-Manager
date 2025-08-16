@@ -34,6 +34,10 @@ async function writeServerSettingsINI(serverInstallPath, cfg) {
   if (cfg.QueryPort != null) SS.QueryPort = Number(cfg.QueryPort);
   if (cfg.RCONEnabled != null) SS.RCONEnabled = cfg.RCONEnabled ? 'True' : 'False';
   if (cfg.RCONPort != null) SS.RCONPort = Number(cfg.RCONPort);
+  if (cfg.MaxPlayers != null) SS.MaxPlayers = Number(cfg.MaxPlayers);
+  if (typeof cfg.ServerPassword === 'string') SS.ServerPassword = cfg.ServerPassword;
+  if (typeof cfg.ServerAdminPassword === 'string') SS.ServerAdminPassword = cfg.ServerAdminPassword;
+  if (cfg.ServerPVE != null) SS.ServerPVE = cfg.ServerPVE ? 'True' : 'False';
 
   try { await fsp.copyFile(iniPath, `${iniPath}.bak`); } catch {}
   const serialized = ini.encode(parsed, { whitespace: true });
@@ -49,6 +53,11 @@ function getDefaults() {
     QueryPort: 27015,
     RCONEnabled: false,
     RCONPort: 27020,
+  MaxPlayers: 70,
+  ServerPassword: '',
+  ServerAdminPassword: '',
+  ServerPVE: false,
+  NoBattlEye: false,
   };
 }
 
