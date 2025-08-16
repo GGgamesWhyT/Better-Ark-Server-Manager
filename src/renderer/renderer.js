@@ -514,3 +514,53 @@ function setupLogs() {
     clearLogsBtn.onclick = () => { logsOutput.textContent = ''; };
   }
 }
+
+// Settings form wiring
+const cfgMap = document.getElementById('cfgMap');
+const cfgSessionName = document.getElementById('cfgSessionName');
+const cfgPort = document.getElementById('cfgPort');
+const cfgQueryPort = document.getElementById('cfgQueryPort');
+const cfgRconEnabled = document.getElementById('cfgRconEnabled');
+const cfgRconPort = document.getElementById('cfgRconPort');
+const saveSettingsBtn = document.getElementById('saveSettings');
+const settingsStatus = document.getElementById('settingsStatus');
+
+async function loadSettingsForm() {
+  try {
+    const cfg = await window.api.config.get();
+    if (cfgMap) cfgMap.value = cfg.Map || 'TheIsland';
+    if (cfgSessionName) cfgSessionName.value = cfg.SessionName || 'My Ark Server';
+    if (cfgPort) cfgPort.value = cfg.Port ?? 7777;
+    if (cfgQueryPort) cfgQueryPort.value = cfg.QueryPort ?? 27015;
+    if (cfgRconEnabled) cfgRconEnabled.checked = !!cfg.RCONEnabled;
+    if (cfgRconPort) cfgRconPort.value = cfg.RCONPort ?? 27020;
+  } catch {}
+}
+
+if (saveSettingsBtn) {
+  saveSettingsBtn.onclick = async () => {
+    try {
+      saveSettingsBtn.disabled = true;
+      settingsStatus.textContent = 'Saving...';
+      const patch = {
+        Map: cfgMap ? cfgMap.value : 'TheIsland',
+        SessionName: cfgSessionName ? cfgSessionName.value : 'My Ark Server',
+        Port: cfgPort ? Number(cfgPort.value) : 7777,
+        QueryPort: cfgQueryPort ? Number(cfgQueryPort.value) : 27015,
+        RCONEnabled: cfgRconEnabled ? !!cfgRconEnabled.checked : false,
+        RCONPort: cfgRconPort ? Number(cfgRconPort.value) : 27020,
+      };
+      const res = await window.api.config.set(patch);
+      settingsStatus.textContent = res.iniPath ? `Saved (INI: ${res.iniPath})` : 'Saved';
+    } catch (e) {
+      settingsStatus.textContent = 'Save failed';
+      alert('Failed to save settings: ' + (e?.message || e));
+    } finally {
+      saveSettingsBtn.disabled = false;
+      setTimeout(() => { if (settingsStatus) settingsStatus.textContent = ''; }, 2500);
+    }
+  };
+}
+
+// Load settings form on init
+loadSettingsForm();

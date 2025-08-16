@@ -84,7 +84,50 @@
 
     <section id="settings" class="tab">
       <h2>Settings</h2>
-      <p>Full settings UI coming next: searchable categories and presets.</p>
+      <div class="list">
+        <div class="result">
+          <label>Map
+            <select id="cfgMap">
+              <option value="TheIsland">TheIsland</option>
+              <option value="TheCenter">TheCenter</option>
+              <option value="ScorchedEarth_P">ScorchedEarth</option>
+              <option value="Ragnarok">Ragnarok</option>
+              <option value="Aberration_P">Aberration</option>
+              <option value="Extinction">Extinction</option>
+              <option value="Valguero_P">Valguero</option>
+              <option value="Genesis">Genesis</option>
+              <option value="CrystalIsles">CrystalIsles</option>
+              <option value="LostIsland">LostIsland</option>
+              <option value="Fjordur">Fjordur</option>
+            </select>
+          </label>
+        </div>
+        <div class="result">
+          <label>Session Name
+            <input id="cfgSessionName" placeholder="My Ark Server" />
+          </label>
+        </div>
+        <div class="result">
+          <label>Port
+            <input id="cfgPort" type="number" min="1" max="65535" />
+          </label>
+          <label>Query Port
+            <input id="cfgQueryPort" type="number" min="1" max="65535" />
+          </label>
+        </div>
+        <div class="result">
+          <label>
+            <input id="cfgRconEnabled" type="checkbox" /> Enable RCON
+          </label>
+          <label>RCON Port
+            <input id="cfgRconPort" type="number" min="1" max="65535" />
+          </label>
+        </div>
+      </div>
+      <div class="row">
+        <button id="saveSettings" class="btn primary">Save Settings</button>
+        <span id="settingsStatus" class="muted"></span>
+      </div>
     </section>
 
     <section id="advanced" class="tab">

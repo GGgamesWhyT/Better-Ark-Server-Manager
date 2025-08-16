@@ -15,6 +15,10 @@ contextBridge.exposeInMainWorld('api', {
     stop: () => ipcRenderer.invoke('server:stop'),
     status: () => ipcRenderer.invoke('server:status'),
   },
+  config: {
+    get: () => ipcRenderer.invoke('config:get'),
+    set: (patch) => ipcRenderer.invoke('config:set', patch),
+  },
   mods: {
     addById: (id) => ipcRenderer.invoke('mods:addById', id),
     list: () => ipcRenderer.invoke('mods:list'),
