@@ -9,6 +9,10 @@
 <body>
   <header>
     <h1>Better Ark Server Manager</h1>
+    <div class="theme-toggle">
+      <span>Dark mode</span>
+      <div id="themeToggle" class="toggle" title="Toggle dark mode"></div>
+    </div>
   </header>
   <nav class="tabs">
     <button data-tab="dashboard" class="active">Dashboard</button>
@@ -21,73 +25,92 @@
 
   <main>
     <section id="dashboard" class="tab active">
-      <p>Welcome! Use the tabs to begin. This is a minimal shell; features will appear as we implement them.</p>
-      <div class="row">
-        <button id="ensureSteamcmd">Install/Verify SteamCMD</button>
-        <span id="steamcmdPath"></span>
-      </div>
-      <div class="row">
-        <button id="checkUpdatesBtn">Check for updates</button>
-        <span id="updateInfo" class="muted"></span>
+      <div class="dashboard-grid">
+        <div class="card kpi">
+          <div class="kpi-header">
+            <h3 style="margin:0">Server Status</h3>
+            <span id="serverStatusPill" class="pill unknown">Unknown</span>
+          </div>
+          <div class="row">
+            <button id="startServerBtn" class="btn primary">Start</button>
+            <button id="stopServerBtn" class="btn">Stop</button>
+            <span id="serverStatus" class="muted">Status: Unknown</span>
+          </div>
+        </div>
+
+        <div class="card kpi">
+          <div class="kpi-header">
+            <h3 style="margin:0">SteamCMD</h3>
+          </div>
+          <div class="row">
+            <button id="ensureSteamcmd" class="btn">Install/Verify SteamCMD</button>
+            <span id="steamcmdPath" class="muted"></span>
+          </div>
+          <div class="row">
+            <button id="checkUpdatesBtn" class="btn">Check for updates</button>
+            <span id="updateInfo" class="muted"></span>
+          </div>
+        </div>
       </div>
     </section>
 
     <section id="install" class="tab">
       <h2>Install / Update</h2>
-      <div>
-        <label>Branch:
-          <select id="branch">
-            <option value="stable">Stable</option>
-            <option value="beta">Beta</option>
-          </select>
-        </label>
-      </div>
-      <div class="row">
-        <label style="flex:1">Server Install Path
-          <input id="installPath" placeholder="Choose a folder" />
-        </label>
-        <button id="browseInstallPath">Browse</button>
-        <button id="saveInstallPath">Save</button>
-      </div>
-      <div class="row">
-        <button id="installServerBtn" class="btn primary">Install</button>
-        <button id="updateServerBtn" class="btn">Update Now</button>
-      </div>
-      <div id="installProgressRow" class="progress-row hidden">
-        <progress id="installProgress" max="100" value="0" style="width:320px;"></progress>
-        <span id="installProgressMsg" class="muted"></span>
-        <span id="installSpeedEta" class="badge hidden"></span>
-        <button id="cancelInstall" class="btn danger" title="Cancel ongoing install/update">Cancel</button>
-      </div>
-      <div class="row">
-        <button id="startServerBtn">Start Server</button>
-        <button id="stopServerBtn">Stop Server</button>
-        <span id="serverStatus">Status: Unknown</span>
+      <div class="card">
+        <div>
+          <label>Branch:
+            <select id="branch">
+              <option value="stable">Stable</option>
+              <option value="beta">Beta</option>
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <label style="flex:1">Server Install Path
+            <input id="installPath" placeholder="Choose a folder" />
+          </label>
+          <button id="browseInstallPath">Browse</button>
+          <button id="saveInstallPath">Save</button>
+        </div>
+        <div class="row">
+          <button id="installServerBtn" class="btn primary">Install</button>
+          <button id="updateServerBtn" class="btn">Update Now</button>
+        </div>
+        <div id="installProgressRow" class="progress-row hidden">
+          <progress id="installProgress" max="100" value="0" style="width:320px;"></progress>
+          <span id="installProgressMsg" class="muted"></span>
+          <span id="installSpeedEta" class="badge hidden"></span>
+          <button id="cancelInstall" class="btn danger" title="Cancel ongoing install/update">Cancel</button>
+        </div>
+  <!-- quick controls moved to dashboard; keeping here is optional, remove duplicates to avoid confusion -->
       </div>
     </section>
 
     <section id="mods" class="tab">
       <h2>Mods</h2>
-      <div class="row">
-        <input id="modIdInput" placeholder="Enter Workshop ID (e.g., 1234567890)" />
-        <button id="addModById">Add Mod by ID</button>
-      </div>
-      <div id="modProgressRow" class="progress-row hidden">
-        <progress id="modProgress" max="100" value="0" style="width:320px;"></progress>
-        <span id="modProgressMsg" class="muted"></span>
-        <span id="modSpeedEta" class="badge hidden"></span>
-        <button id="cancelMod" class="btn danger" title="Cancel current mod task">Cancel</button>
-      </div>
-      <div id="installedMods" class="list"></div>
-      <h3>Active Mods</h3>
-      <div id="modsState" class="list"></div>
-      <div class="row">
-        <button id="saveActiveMods">Save Active Mods to INI</button>
+      <div class="card">
+        <div class="row">
+          <input id="modIdInput" placeholder="Enter Workshop ID (e.g., 1234567890)" />
+          <button id="addModById">Add Mod by ID</button>
+        </div>
+        <div id="modProgressRow" class="progress-row hidden">
+          <progress id="modProgress" max="100" value="0" style="width:320px;"></progress>
+          <span id="modProgressMsg" class="muted"></span>
+          <span id="modSpeedEta" class="badge hidden"></span>
+          <button id="cancelMod" class="btn danger" title="Cancel current mod task">Cancel</button>
+        </div>
+        <div id="installedMods" class="list"></div>
+        <h3>Active Mods</h3>
+        <div id="modsState" class="list"></div>
+        <div class="row">
+          <button id="saveActiveMods">Save Active Mods to INI</button>
+        </div>
       </div>
     </section>
 
     <section id="settings" class="tab">
       <h2>Settings</h2>
+      <div class="card">
       <div class="list">
         <div class="result">
           <label>Map
@@ -155,21 +178,26 @@
           </label>
         </div>
       </div>
-      <div class="row">
+  <div class="row">
         <button id="saveSettings" class="btn primary">Save Settings</button>
         <span id="settingsStatus" class="muted"></span>
       </div>
+  </div>
     </section>
 
     <section id="advanced" class="tab">
       <h2>Advanced</h2>
-      <p>Raw INI editor coming later.</p>
+      <div class="card">
+        <p>Raw INI editor coming later.</p>
+      </div>
     </section>
 
     <section id="logs" class="tab">
       <h2>Logs</h2>
-  <div class="row"><button id="clearLogs">Clear</button></div>
-      <pre id="logsOutput">Logs will appear here.</pre>
+      <div class="card">
+        <div class="row"><button id="clearLogs">Clear</button></div>
+        <pre id="logsOutput">Logs will appear here.</pre>
+      </div>
     </section>
   </main>
 

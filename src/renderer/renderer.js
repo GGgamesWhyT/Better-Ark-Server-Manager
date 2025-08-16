@@ -94,12 +94,20 @@ const updateServerBtn = document.getElementById('updateServerBtn');
 const startServerBtn = document.getElementById('startServerBtn');
 const stopServerBtn = document.getElementById('stopServerBtn');
 const serverStatusEl = document.getElementById('serverStatus');
+const serverStatusPill = document.getElementById('serverStatusPill');
 
 async function refreshServerStatus() {
   if (!serverStatusEl) return;
   try {
     const st = await window.api.server.status();
     serverStatusEl.textContent = `Status: ${st.state}${st.pid ? ` (PID ${st.pid})` : ''}`;
+    if (serverStatusPill) {
+      serverStatusPill.textContent = st.state;
+      serverStatusPill.classList.remove('online','offline','unknown');
+      if (st.state === 'Online') serverStatusPill.classList.add('online');
+      else if (st.state === 'Offline') serverStatusPill.classList.add('offline');
+      else serverStatusPill.classList.add('unknown');
+    }
     if (startServerBtn && stopServerBtn) {
       const running = st.state === 'Online';
       startServerBtn.disabled = running;
@@ -268,14 +276,14 @@ async function renderModsState() {
     current.forEach((m, idx) => {
       const row = document.createElement('div');
       row.className = 'result';
-      row.innerHTML = `
+    row.innerHTML = `
         <span>
           <input type="checkbox" ${m.enabled ? 'checked' : ''} data-idx="${idx}" class="toggle" />
           <strong>${m.id}</strong>
         </span>
         <span>
-          <button class="up" data-idx="${idx}">▲</button>
-          <button class="down" data-idx="${idx}">▼</button>
+      <button class="up icon-btn" data-idx="${idx}" title="Move up">▲</button>
+      <button class="down icon-btn" data-idx="${idx}" title="Move down">▼</button>
         </span>
       `;
       row.querySelector('.toggle').addEventListener('change', (e) => {
@@ -618,3 +626,22 @@ if (checkUpdatesBtn) {
     }
   };
 }
+
+// Theme toggle
+(function themeInit(){
+  const el = document.getElementById('themeToggle');
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  if (el) {
+    el.addEventListener('click', () => {
+      const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (dark) {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.removeItem('theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+      }
+    });
+  }
+})();
