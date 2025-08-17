@@ -8,7 +8,10 @@
 </head>
 <body>
   <header>
-    <h1>Better Ark Server Manager</h1>
+    <div class="brand">
+      <img src="./assets/logo.png" alt="Better Ark" class="logo" onerror="this.remove()" />
+      <h1>Better Ark Server Manager</h1>
+    </div>
     <div class="theme-toggle">
       <span>Dark mode</span>
       <div id="themeToggle" class="toggle" title="Toggle dark mode"></div>
@@ -28,7 +31,10 @@
       <div class="dashboard-grid">
         <div class="card kpi">
           <div class="kpi-header">
-            <h3 style="margin:0">Server Status</h3>
+            <h3 style="margin:0; display:flex; align-items:center; gap:8px;">
+              <img src="./assets/logo.png" alt="logo" style="width:26px; height:26px; object-fit:contain; opacity:.9" onerror="this.remove()"/>
+              Server Status
+            </h3>
             <span id="serverStatusPill" class="pill unknown">Unknown</span>
           </div>
           <div class="row">
@@ -69,8 +75,8 @@
           <label style="flex:1">Server Install Path
             <input id="installPath" placeholder="Choose a folder" />
           </label>
-          <button id="browseInstallPath">Browse</button>
-          <button id="saveInstallPath">Save</button>
+          <button id="browseInstallPath" class="btn">Browse</button>
+          <button id="saveInstallPath" class="btn">Save</button>
         </div>
         <div class="row">
           <button id="installServerBtn" class="btn primary">Install</button>
